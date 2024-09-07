@@ -1,42 +1,16 @@
 package mglogger
 
 import (
-	"io"
 	"os"
 
 	"github.com/sirupsen/logrus"
 )
 
-type writerHook struct {
-	Writer    []io.Writer
-	LogLevels []logrus.Level
-}
-
-func (hook *writerHook) Fire(entry *logrus.Entry) error {
-	line, err := entry.String()
-	if err != nil {
-		return err
-	}
-	for _, w := range hook.Writer {
-		_, err := w.Write([]byte(line))
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
-func (hook *writerHook) Levels() []logrus.Level {
-	return hook.LogLevels
-}
-
-//var e *logrus.Entry
-
 type Logger struct {
 	*logrus.Entry
 }
 
-func GetLogger(filePath string, fileName string) *Logger {
+func GetLogger(filePath string, fileName string, mode string) *Logger {
 
 	l := logrus.New()
 	l.SetReportCaller(true)
@@ -50,17 +24,15 @@ func GetLogger(filePath string, fileName string) *Logger {
 		}
 	}
 
-	allFile, err := os.OpenFile(filePath+"/"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
-	if err != nil {
-		panic(err)
+	if mode == "release" {
+
+		allFile, err := os.OpenFile(filePath+"/"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
+		if err != nil {
+			panic(err)
+		}
+
+		l.SetOutput(allFile)
 	}
-
-	l.SetOutput(io.Discard)
-
-	l.AddHook(&writerHook{
-		Writer:    []io.Writer{allFile, os.Stdout},
-		LogLevels: logrus.AllLevels,
-	})
 
 	l.SetLevel(logrus.TraceLevel)
 
