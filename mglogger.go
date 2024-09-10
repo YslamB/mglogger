@@ -1,7 +1,6 @@
 package mglogger
 
 import (
-	"io"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -24,20 +23,18 @@ func GetLogger(filePath string, fileName string, mode string) *Logger {
 			panic(err)
 		}
 	}
-	logFile, err := os.OpenFile(filePath+"/"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
-
-	if err != nil {
-		panic(err)
-	}
 
 	if mode == "release" {
-		l.SetOutput(logFile)
 
-	} else {
-		multiWriter := io.MultiWriter(os.Stdout, logFile)
-		l.SetOutput(multiWriter)
+		logFile, err := os.OpenFile(filePath+"/"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
+		if err != nil {
+			panic(err)
+		}
+
+		l.SetOutput(logFile)
 	}
 
 	l.SetLevel(logrus.TraceLevel)
+
 	return &Logger{logrus.NewEntry(l)}
 }
